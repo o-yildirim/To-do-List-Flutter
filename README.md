@@ -1,6 +1,5 @@
-# flutter_app
+# Flutter project form of my "To do-List" application.
 
-A new Flutter application.
 
 ## Getting Started
 
