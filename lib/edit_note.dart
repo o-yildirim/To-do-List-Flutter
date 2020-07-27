@@ -5,6 +5,7 @@ import 'package:flutter_cupertino_date_picker/flutter_cupertino_date_picker.dart
 import 'package:intl/intl.dart';
 import 'package:flutter_app/models/task.dart';
 import 'package:flutter_app/utilities/database_helper.dart';
+import 'package:flutter_app/utilities/notification_helper.dart';
 
 class NoteDetail extends StatefulWidget {
 
@@ -21,6 +22,7 @@ class NoteDetail extends StatefulWidget {
 class EditNoteState extends State<NoteDetail> {
 
   DatabaseHelper databaseHelper = DatabaseHelper();
+  NotificationHelper notificationHelper = NotificationHelper();
 
   var _formValidationKey = new GlobalKey<FormState>();
 
@@ -33,12 +35,17 @@ class EditNoteState extends State<NoteDetail> {
   FormatHelper formatHelper = FormatHelper();
 
   Task task;
+  Task oldTask;
 
   EditNoteState(this.task);
 
   @override
-  void initState() {
+  void initState()
+  {
     super.initState();
+
+    oldTask= new Task(task.task,task.date,task.priority);
+
     taskController.text = task.task;
 
     String fullDate = formatHelper.convertDbDateForUS(task.date);
@@ -46,6 +53,8 @@ class EditNoteState extends State<NoteDetail> {
     dateController.text = formatHelper.getDMYFromUSDate(fullDate);
     hourController.text = formatHelper.getHourFromDbDate(task.date);
     currentPriority = getPriorityAsString(task.priority);
+
+
   }
 
   @override
@@ -208,6 +217,9 @@ class EditNoteState extends State<NoteDetail> {
   }
 
   void assignNewValuesToTask() {
+
+
+
     updatePriorityAsInt(currentPriority);
     task.task = taskController.text;
     task.date = dateController.text + " " + hourController.text;
@@ -216,13 +228,13 @@ class EditNoteState extends State<NoteDetail> {
 
   void updateOnDatabase() async
   {
-    //task.date = formatHelper.convertUsDateForOrder(task.date);
     moveToLastScreen();
 
     int result = await databaseHelper.updateTask(task);
 
     if (result != 0) {
       _showAlertDialog("Status", "Task is successfully edited.");
+      notificationHelper.updateNotif(task,oldTask);
     } else {
       _showAlertDialog("Status", "Failed to edit task.");
     }

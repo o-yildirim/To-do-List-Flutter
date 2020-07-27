@@ -79,7 +79,6 @@ class Task
     this._id = map["comp_id"];
     this._task = map["comp_task"];
     this._date = FormatHelper.formatHelper.convertDbDateForUS(map["comp_date_of_task"])+ "\nComplete date: " + FormatHelper.formatHelper.convertDbDateForUS(map["comp_complete_date"])  ;
-    //this.date = map["comp_date_of_task"]+ "\nComplete date: " + map["comp_complete_date"];
     this._priority = map["comp_priority"];
   }
 

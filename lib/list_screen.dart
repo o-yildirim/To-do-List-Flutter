@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/edit_note.dart';
 import 'package:flutter_app/utilities/format_helper.dart';
+import 'package:flutter_app/utilities/notification_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/add_task_screen.dart';
 import 'package:flutter_app/models/task.dart';
@@ -32,6 +33,7 @@ class _StateOfTasks extends State<TaskView> {
   int compTaskCount = 0;
 
   FormatHelper formatHelper = FormatHelper();
+  NotificationHelper notificationHelper = NotificationHelper();
 
   @override
   void initState() {
@@ -40,6 +42,10 @@ class _StateOfTasks extends State<TaskView> {
     dateController.text = formatHelper.getCurrentDateInUS();
 
     selectedOrder = orders[0];
+    notificationHelper.init();
+
+    //databaseHelper.clearNotifTable();
+    //notificationHelper.cancelAllNotifications();
   }
 
   @override
@@ -54,20 +60,18 @@ class _StateOfTasks extends State<TaskView> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("To do-List", textAlign: TextAlign.center),
-      ),
-      body: getListView(),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: () {
-          navigateToAddTask(new Task('', '', 1));
-        },
-        tooltip: 'Add task',
-        child: Icon(Icons.add),
-      ),
-    );
+        appBar: AppBar(
+          title: Text("To do-List", textAlign: TextAlign.center),
+        ),
+        body: getListView(),
+        floatingActionButton: new FloatingActionButton(
+          onPressed: () {
+            navigateToAddTask(new Task('', '', 1));
+          },
+          tooltip: 'Add task',
+          child: Icon(Icons.add),
+        ));
   }
-
 
   Widget getListView() {
     var listView = ListView.builder(
@@ -84,17 +88,19 @@ class _StateOfTasks extends State<TaskView> {
                       "Tasks",
                       textScaleFactor: 1.5,
                     ),
-                   Row(
-                     mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[Text("Order by: ",),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          "Order by: ",
+                        ),
                         getOrderDropdownButton(),
                       ],
                     )
                   ],
                 ),
               ));
-
-        } else if (index <= taskList.length ) {
+        } else if (index <= taskList.length) {
           return Card(
               elevation: 2.0,
               color: Colors.white,
@@ -107,12 +113,14 @@ class _StateOfTasks extends State<TaskView> {
                 trailing:
                     Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                   GestureDetector(
-                      child: Icon(Icons.check_box, color: Colors.grey),
+                      child:
+                          Icon(Icons.check_box, color: Colors.grey, size: 28), //Default 24 mus
                       onTap: () {
                         _completeTask(context, taskList[index - 1]);
                       }),
+                  Container(width: 10.0),
                   GestureDetector(
-                    child: Icon(Icons.delete, color: Colors.grey),
+                    child: Icon(Icons.delete, color: Colors.grey,size: 28),
                     onTap: () {
                       _deleteTask(context, taskList[index - 1]);
                     },
@@ -128,56 +136,48 @@ class _StateOfTasks extends State<TaskView> {
                   navigateToEditTask(taskList[index - 1]);
                 },
               ));
-        }
-        else if(index == taskList.length+1)
-        {
+        } else if (index == taskList.length + 1) {
           return Card(
               elevation: 2.0,
               color: Colors.orangeAccent,
               child: ListTile(
-                title:Text(
+                title: Text(
                   "Completed",
                   textScaleFactor: 1.5,
                 ),
               ));
+        } else if (index > taskList.length + 1) {
+          return Card(
+              elevation: 2.0,
+              color: Colors.white,
+              child: ListTile(
+                title: Text(compTaskList[index - taskList.length - 2].task),
+                leading: CircleAvatar(
+                    child: Icon(Icons.event_note),
+                    backgroundColor: getPriorityColor(
+                        compTaskList[index - taskList.length - 2].priority)),
+                trailing:
+                    Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  GestureDetector(
+                    child: Icon(Icons.delete, color: Colors.grey),
+                    onTap: () {
+                      _deleteCompTask(
+                          context,
+                          compTaskList[index -
+                              taskList.length -
+                              2]); //DELETE FROM COMP OLACAK BU
+                    },
+                  )
+                ]),
+                subtitle: Text(compTaskList[index - taskList.length - 2].date,
+                    style: TextStyle(color: Colors.green)),
+              ));
         }
-        else if(index > taskList.length+1)
-          {
-            return Card(
-                elevation: 2.0,
-                color: Colors.white,
-                child: ListTile(
-                  title: Text(compTaskList[index-taskList.length - 2 ].task),
-                  leading: CircleAvatar(
-                      child: Icon(Icons.event_note),
-                      backgroundColor:
-                      getPriorityColor(compTaskList[index-taskList.length - 2].priority)),
-                  trailing:
-                  Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-
-                    GestureDetector(
-                      child: Icon(Icons.delete, color: Colors.grey),
-                      onTap: () {
-                        _deleteCompTask(context,compTaskList[index-taskList.length -2 ]); //DELETE FROM COMP OLACAK BU
-                      },
-                    )
-                  ]),
-
-              subtitle: Text(compTaskList[index-taskList.length - 2 ].date, style: TextStyle(
-                  color: Colors.green)),
-
-                ));
-          }
       },
-
       itemCount: taskList.length + compTaskList.length + 2,
     );
     return listView;
   }
-
-
-
-
 
   Color getPriorityColor(int priority) {
     switch (priority) {
@@ -197,17 +197,21 @@ class _StateOfTasks extends State<TaskView> {
     }
   }
 
-  void _deleteTask(BuildContext context,
-      Task task) async //context snackbar için
-      {
+  void _deleteTask(
+      BuildContext context, Task task) async //context snackbar için
+  {
     int result = await databaseHelper.deleteTask(task.id);
     if (result != 0) {
       updateTaskView(selectedOrder);
+      notificationHelper.removeNotifications(task);
       _showSnackBar(context, 'Task deleted.');
     }
   }
 
-  void _deleteCompTask(BuildContext context,Task task,) async {
+  void _deleteCompTask(
+    BuildContext context,
+    Task task,
+  ) async {
     int result = await databaseHelper.deleteCompTask(task.id);
     if (result != 0) {
       updateTaskView(selectedOrder);
@@ -216,13 +220,13 @@ class _StateOfTasks extends State<TaskView> {
   }
 
   void _completeTask(BuildContext context, Task task) async {
-    int result;
+    int result = await databaseHelper.insertCompTask(task);
 
-    result = await databaseHelper.insertCompTask(task);
     if (result != 0) {
       result = await databaseHelper.deleteTask(task.id);
       if (result != 0) {
         _showSnackBar(context, 'Task completed!');
+        notificationHelper.removeNotifications(task);
         updateTaskView(selectedOrder);
       }
     }
@@ -235,7 +239,6 @@ class _StateOfTasks extends State<TaskView> {
     );
     Scaffold.of(context).showSnackBar(sb);
   }
-
 
   void updateTaskView(String order) {
     final Future<Database> dbFuture = databaseHelper.initializeDatabase();
@@ -252,34 +255,30 @@ class _StateOfTasks extends State<TaskView> {
             this.compTaskList = compTaskList;
             this.compTaskCount = compTaskList.length;
           });
+        });
       });
     });
-
-  });
   }
-
 
   void navigateToEditTask(Task task) async {
     bool result =
-    await Navigator.push(context, MaterialPageRoute(builder: (context) {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
       return NoteDetail(task);
     }));
 
     if (result != null) {
       updateTaskView(selectedOrder);
-
     }
   }
 
   void navigateToAddTask(Task task) async {
     bool result =
-    await Navigator.push(context, MaterialPageRoute(builder: (context) {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
       return AddTask();
     }));
 
     if (result != null) {
       updateTaskView(selectedOrder);
-
     }
   }
 
@@ -308,7 +307,7 @@ class _StateOfTasks extends State<TaskView> {
   Color getColorForSubtitle(Task task) {
     String dateOfTask = formatHelper.convertDbDateForUS(task.date);
     DateTime parsedDate =
-    DateFormat('d MMMM y HH:mm', 'en_US').parse(dateOfTask);
+        DateFormat('d MMMM y HH:mm', 'en_US').parse(dateOfTask);
     DateTime now = DateTime.now();
 
     if (parsedDate.isBefore(now)) {
@@ -317,5 +316,3 @@ class _StateOfTasks extends State<TaskView> {
     return null;
   }
 }
-
-

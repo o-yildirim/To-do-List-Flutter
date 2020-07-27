@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_app/models/task.dart';
 import 'package:flutter_app/utilities/database_helper.dart';
 import 'package:flutter_app/utilities/format_helper.dart';
+import 'package:flutter_app/utilities/notification_helper.dart';
 
 
 class AddTask extends StatefulWidget {
@@ -23,6 +24,7 @@ class _StateOfTask extends State<AddTask> {
   var currentPriority = "";
   DatabaseHelper databaseHelper = DatabaseHelper();
   FormatHelper formatHelper = FormatHelper();
+  NotificationHelper notificationHelper = NotificationHelper();
 
   @override
   void initState() {
@@ -205,6 +207,8 @@ class _StateOfTask extends State<AddTask> {
     int result = await databaseHelper.insertTask(task);
     if (result != 0) {
       _showAlertDialog("Status", "Task is successfully added. ");
+      notificationHelper.scheduleNotification(task);
+
     } else {
       _showAlertDialog("Status", "Failed to add task.");
     }

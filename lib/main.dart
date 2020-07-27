@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'add_task_screen.dart';
 import 'list_screen.dart';
 
 void main() {
@@ -18,7 +16,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.deepOrangeAccent,
         accentColor: Colors.deepOrangeAccent,
-        //  brightness: Brightness.dark
       ),
     );
   }

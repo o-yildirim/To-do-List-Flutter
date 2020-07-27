@@ -21,7 +21,12 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  firebase_messaging: ^5.1.2
+  flutter_local_notifications: 1.4.4+2
+  firebase_messaging: ^6.0.16
+  firebase_core: ^0.4.5
+  firebase_auth: ^0.16.1
+  firebase_analytics: ^5.0.16
+  cloud_firestore: ^0.13.7
   flutter_cupertino_date_picker: ^1.0.26+2
   sqflite: any
   path_provider: any
