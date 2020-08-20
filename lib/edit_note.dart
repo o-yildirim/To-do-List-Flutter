@@ -242,8 +242,8 @@ class EditNoteState extends State<NoteDetail> {
 
   void resetFields() {
     taskController.text = "";
-    dateController.text = "";
-    hourController.text = "";
+    dateController.text = formatHelper.getCurrentDateInUS();
+    hourController.text = formatHelper.getCurrentHour();
   }
 
   void moveToLastScreen() {

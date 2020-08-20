@@ -180,8 +180,9 @@ class _StateOfTask extends State<AddTask> {
 
   void resetFields() {
     taskController.text = "";
-    dateController.text = "";
-    hourController.text = "";
+    dateController.text = formatHelper.getCurrentDateInUS();
+    //hourController.text = "";
+    hourController.text = formatHelper.getCurrentHour();
   }
 
   int getPriorityAsInt(String value) {
